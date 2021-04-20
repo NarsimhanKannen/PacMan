@@ -9,7 +9,7 @@ public class InputManager : MonoBehaviour
     private Vector2 oldTouchPos;
     private Vector2 currentTouchPos;
 
-    private float tolerance = 20;
+    private float tolerance = 35;
 
     private void Awake()
     {
