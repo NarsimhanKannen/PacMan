@@ -6,10 +6,14 @@ public class InputManager : MonoBehaviour
 {
     public static InputManager Instance;
 
-    private Vector2 oldTouchPos;
-    private Vector2 currentTouchPos;
+    private Vector2 fingerDown;
+    private Vector2 fingerUp;
 
-    private float tolerance = 35;
+    private bool isFingerReleased = false;
+
+    private float tolerance = 20;
+
+    private RotateDirection dir;
 
     private void Awake()
     {
@@ -23,48 +27,61 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    public RotateDirection GetTouchGesture()
+    public RotateDirection GetDirection()
     {
-        if (Input.GetMouseButtonDown(0))
+        return dir;
+    }
+
+    private void SetDir(RotateDirection dir)
+    {
+        this.dir = dir;
+    }
+
+    private void checkSwipe()
+    {
+        if (verticalMove() > tolerance && verticalMove() > horizontalValMove())
         {
-            oldTouchPos = currentTouchPos = Input.mousePosition;
+            if (fingerDown.y - fingerUp.y > 0)
+            {
+                SetDir(RotateDirection.Up);
+            }
+            else if (fingerDown.y - fingerUp.y < 0)
+            {
+                SetDir(RotateDirection.Down);
+            }
+
+            isFingerReleased = true;
+            fingerUp = fingerDown;
         }
 
-        if (Input.GetMouseButton(0))
+        else if (horizontalValMove() > tolerance && horizontalValMove() > verticalMove())
         {
-            currentTouchPos = Input.mousePosition;
-        }
+            if (fingerDown.x - fingerUp.x > 0)
+            {
+                SetDir(RotateDirection.Right);
+            }
+            else if (fingerDown.x - fingerUp.x < 0)
+            {
+                SetDir(RotateDirection.Left);
+            }
 
-        if (currentTouchPos.sqrMagnitude != oldTouchPos.sqrMagnitude)
+            isFingerReleased = true;
+            fingerUp = fingerDown;
+        }
+        else
         {
-            if ((currentTouchPos.x - oldTouchPos.x) > tolerance)
-            {
-                print("Right");
-                return RotateDirection.Right;
-            }
-            else if ((currentTouchPos.x - oldTouchPos.x) < -tolerance)
-            {
-                print("Left");
-                return RotateDirection.Left;
-            }
-            else if ((currentTouchPos.y - oldTouchPos.y) > tolerance)
-            {
-                print("Up");
-                return RotateDirection.Up;
-            }
-            else if ((currentTouchPos.y - oldTouchPos.y) < -tolerance)
-            {
-                print("Down");
-                return RotateDirection.Down;
-            }
+            SetDir(RotateDirection.None);
         }
+    }
 
-        if (Input.GetMouseButtonUp(0))
-        {
-            oldTouchPos = currentTouchPos = Vector2.zero;
-        }
+    float verticalMove()
+    {
+        return Mathf.Abs(fingerDown.y - fingerUp.y);
+    }
 
-        return RotateDirection.None;
+    float horizontalValMove()
+    {
+        return Mathf.Abs(fingerDown.x - fingerUp.x);
     }
 
     public RotateDirection GetKeyboardInput()
@@ -81,5 +98,26 @@ public class InputManager : MonoBehaviour
         }
 
         return RotateDirection.None;
+    }
+    private void Update()
+    {
+        foreach (Touch touch in Input.touches)
+        {
+            if (touch.phase == TouchPhase.Began)
+            {
+                fingerUp = touch.position;
+                fingerDown = touch.position;
+                isFingerReleased = false;
+            }
+
+            if (touch.phase == TouchPhase.Moved)
+            {
+                if (!isFingerReleased)
+                {
+                    fingerDown = touch.position;
+                    checkSwipe();
+                }
+            }
+        }
     }
 }

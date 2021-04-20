@@ -174,7 +174,7 @@ public class PacManBehaviour : MonoBehaviour
     void Update()
     {
 #if UNITY_ANDROID
-        RotateCharacter(InputManager.Instance.GetTouchGesture());
+        RotateCharacter(InputManager.Instance.GetDirection());
 #endif
 
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN
